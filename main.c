@@ -1,7 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+
+//#include <stdlib.h>
 #include <math.h>
 #include "read_params.h"
+#include "read_params.c"
 
 #define SAVE_OUTPUT
 //#define COSMOLOGY
@@ -168,9 +170,27 @@ void compute_halo_mass_function() {
 #endif
 }
 
-int main(int argc, char *argv[]) {
-    get_params(argc, argv);
+void print_global_params(struct global_params params) {
+    // Print each member of the struct
+    printf("cosmology: %d\n", params.cosmology);
+    printf("halo_finder: %d\n", params.halo_finder);
+    printf("save_output: %d\n", params.save_output);
+    printf("n_steps: %d\n", params.n_steps);
+    printf("n_prts: %d\n", params.n_prts);
+    printf("m_prts: %f\n", params.m_prts);
+    printf("v_prts_max: %f\n", params.v_prts_max);
+    printf("h: %f\n", params.h);
+    printf("Omega_m: %f\n", params.Omega_m);
+    printf("Omega_Lambda: %f\n", params.Omega_Lambda);
+    printf("N_bins_hf: %d\n", params.N_bins_hf);
+}
 
+int main(int argc, char *argv[]) {
+    char* filename = print_params(argc, argv);
+    struct global_params simulation_params = get_params(filename);
+    
+    //print_global_params(simulation_params);   
+ 
     return 0;
 
     double a = 1.0;  // Initial scale factor (normalized to 1)

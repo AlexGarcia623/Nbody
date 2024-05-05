@@ -1,13 +1,31 @@
+#ifndef READ_PARAMS_H
+#define READ_PARAMS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <ctype.h>
 
 typedef union {
   bool boolean_value;
   double float_value;
 } Value;
+
+struct global_params {
+  bool cosmology;
+  bool halo_finder;
+  bool save_output;
+  int n_steps;
+  int n_prts;
+  float m_prts;
+  float v_prts_max;
+  float h;
+  float Omega_m;
+  float Omega_Lambda;
+  int N_bins_hf;
+};
 
 int max_label_width(FILE *file) {
     char line[100];
@@ -63,23 +81,26 @@ void print_title() {
 }
 
 
-int get_params(int argc, char *argv[]) {
+char* print_params(int argc, char *argv[]) {
   print_title();
+
+  char* fname = malloc(100* sizeof(char));
+
+  struct global_params params = {false, false, false};
 
   FILE *file;
 
-  char default_file[] = "simulation_params.txt";
+  char default_file[] = "default_simulation_params.txt";
   char *filename;
 
   if (argc == 1) {
     printf("No file provided, using %s\n\n", default_file);
     filename = default_file;
   } else if (argc == 2) {
-    printf("Reading from file %s\n\n", filename)
     filename = argv[1];
   } else {
     printf("!!!This only takes one argument!!!");
-    return -1;
+    exit(1);
   }
 
   file = fopen(filename,"r");
@@ -88,7 +109,7 @@ int get_params(int argc, char *argv[]) {
 
   if (file == NULL) {
     printf("NOT ABLE TO OPEN FILE");
-    return -1;
+    exit(1);
   }
 
   int label_width = max_label_width(file);
@@ -115,6 +136,13 @@ int get_params(int argc, char *argv[]) {
   printf("\n");
 
   fclose(file);
-  return 0;
+  strcpy(fname, filename);
+
+  fname[strlen(filename)] = '\0';
+
+  return fname;
 }
 
+struct global_params get_params(char* filename);
+
+#endif
