@@ -5,38 +5,41 @@
 #include "read_params.h"
 #include "read_params.c"
 
-#define SAVE_OUTPUT
+//#define SAVE_OUTPUT
 //#define COSMOLOGY
 //#define HALO_FINDER
 
-#define N_PARTICLES 15
-#define N_STEPS 25
-#define M_PART 1e10
+int COSMOLOGY;
+int SAVE_OUTPUT;
+int HALO_FINDER;
 
-#define G 6.67430e-11   // Gravitational constant (m^3/kg/s^2) 
-#ifdef COSMOLOGY
-  #define HUBBLE_CONSTANT 70.0  // Hubble constant (km/s/Mpc)
-  #define OMEGA_M 0.3    // Matter density parameter
-  #define OMEGA_LAMBDA 0.7   // Dark energy density parameter
-#endif
-#ifdef HALO_FINDER
-  #define M_MIN 1.0e10    // Minimum halo mass for binning
-  #define M_MAX 1.0e15    // Maximum halo mass for binning 
-  #define N_BINS 50       // Number of bins for halo mass function
-#endif
+int N_PARTICLES;
+int N_STEPS;
+float M_PARTICLES;
+float V_PARTICLES;
+int N_BINS;
 
-typedef struct {
+float M_MIN = 1e10;
+float M_MAX = 1e15;
+
+float G = 6.67430e-11;
+
+float h;
+float HUBBLE_CONSTANT;
+float OMEGA_M;
+float OMEGA_LAMBDA;
+
+
+struct Particle {
     double mass;
     double position[3];
     double velocity[3];
-} Particle;
+};
 
-Particle particles[N_PARTICLES];
-
-void initialize_particles() {
+void initialize_particles(struct Particle *particles) {
     // Initialize particles with random positions and velocities
     for (int i = 0; i < N_PARTICLES; i++) {
-        particles[i].mass = rand() / (RAND_MAX + 1.0) * M_PART; 
+        particles[i].mass = rand() / (RAND_MAX + 1.0) * M_PARTICLES; 
         // (RAND_MAX + 1.0) * 1e15;
 
         particles[i].position[0] = rand() / (RAND_MAX + 1.0) * 100.0;
@@ -188,6 +191,29 @@ void print_global_params(struct global_params params) {
 int main(int argc, char *argv[]) {
     char* filename = print_params(argc, argv);
     struct global_params simulation_params = get_params(filename);
+
+    COSMOLOGY = simulation_params.cosmology;
+    HALO_FINDER = simulation_params.halo_finder;
+    SAVE_OUTPUT = simulation_params.save_output;
+
+    N_STEPS = simulation_params.n_steps;
+    N_PARTICLES = simulation_params.n_prts;
+    M_PARTICLES = simulation_params.m_prts;
+    V_PARTICLES = simulation_params.v_prts_max;
+
+    h = simulation_params.h;
+    HUBBLE_CONSTANT = h * 100;
+    OMEGA_M = simulation_params.Omega_m;
+    OMEGA_LAMBDA = simulation_params.Omega_Lambda;
+    N_BINS = simulation_params.N_bins_hf;
+
+    Particle particles[N_PARTICLES];
+
+    if (COSMOLOGY == 0) {
+      printf("Cosmology is enabled");
+    } else {
+      printf("No Cosmology");
+    }
     
     //print_global_params(simulation_params);   
  
@@ -196,7 +222,7 @@ int main(int argc, char *argv[]) {
     double a = 1.0;  // Initial scale factor (normalized to 1)
     
     // Initialize particles
-    initialize_particles();
+    initialize_particles(particle);
 
     // Main simulation loop
     for (int step = 0; step < N_STEPS; step++) {

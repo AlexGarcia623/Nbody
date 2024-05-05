@@ -1,5 +1,5 @@
 ### Simulation State Variables
-Cosmology: False
+Cosmology: True
 Halo_finder: False
 Save_output: True
 
