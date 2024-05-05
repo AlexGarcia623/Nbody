@@ -1,4 +1,4 @@
 CC = gcc
 CFLAGS = -O0 -g
 
-all: main
+all: main read_params

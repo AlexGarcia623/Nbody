@@ -1,0 +1,120 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <unistd.h>
+
+typedef union {
+  bool boolean_value;
+  double float_value;
+} Value;
+
+int max_label_width(FILE *file) {
+    char line[100];
+    int max_width = 0;
+
+    // Loop through each line in the file
+    while (fgets(line, sizeof(line), file)) {
+        char *colon_pos = strchr(line, ':');
+        if (colon_pos != NULL) {
+            *colon_pos = '\0'; // Replace colon with null terminator to split the string
+            
+            // Update max_width if needed
+            int width = strlen(line);
+            if (width > max_width) {
+                max_width = width;
+            }
+        }
+    }
+
+    return max_width + 1;
+}
+
+void print_title() {
+    printf("\n");
+    printf("  /$$$$$$                                              \n");
+    printf(" /$$__  $$                                             \n");
+    printf("| $$  \\__/  /$$$$$$   /$$$$$$$ /$$$$$$/$$$$   /$$$$$$ \n");
+    printf("| $$       /$$__  $$ /$$_____/| $$_  $$_  $$ /$$__  $$\n");
+    printf("| $$      | $$  \\ $$|  $$$$$$ | $$ \\ $$ \\ $$| $$  \\ $$\n");
+    printf("| $$    $$| $$  | $$ \\____  $$| $$ | $$ | $$| $$  | $$\n");
+    printf("|  $$$$$$/|  $$$$$$/ /$$$$$$$/| $$ | $$ | $$|  $$$$$$/\n");
+    printf(" \\______/  \\______/ |_______/ |__/ |__/ |__/ \\______/ \n");
+    printf("                                                      \n");
+    printf("                                                      \n");
+    printf("                                                      \n");
+    printf(" /$$   /$$ /$$                       /$$              \n");
+    printf("| $$$ | $$| $$                      | $$              \n");
+    printf("| $$$$| $$| $$$$$$$   /$$$$$$   /$$$$$$$ /$$   /$$    \n");
+    printf("| $$ $$ $$| $$__  $$ /$$__  $$ /$$__  $$| $$  | $$    \n");
+    printf("| $$  $$$$| $$  \\ $$| $$  \\ $$| $$  | $$| $$  | $$    \n");
+    printf("| $$\\  $$$| $$  | $$| $$  | $$| $$  | $$| $$  | $$    \n");
+    printf("| $$ \\  $$| $$$$$$$/|  $$$$$$/|  $$$$$$$|  $$$$$$$    \n");
+    printf("|__/  \\__/|_______/  \\______/  \\_______/ \\____  $$    \n");
+    printf("                                         /$$  | $$    \n");
+    printf("                                        |  $$$$$$/    \n");
+    printf("                                         \\______/     \n");
+    printf("\n\n");
+
+    sleep(1);
+
+    printf("!!!Welcome to Cosmo Nbody!!!\n");
+    printf("You're running an N-body Simulation with the following parameters:\n\n");
+}
+
+
+int get_params(int argc, char *argv[]) {
+  print_title();
+
+  FILE *file;
+
+  char default_file[] = "simulation_params.txt";
+  char *filename;
+
+  if (argc == 1) {
+    printf("No file provided, using %s\n\n", default_file);
+    filename = default_file;
+  } else if (argc == 2) {
+    printf("Reading from file %s\n\n", filename)
+    filename = argv[1];
+  } else {
+    printf("!!!This only takes one argument!!!");
+    return -1;
+  }
+
+  file = fopen(filename,"r");
+
+  char line[100]; // Max line length of 100
+
+  if (file == NULL) {
+    printf("NOT ABLE TO OPEN FILE");
+    return -1;
+  }
+
+  int label_width = max_label_width(file);
+
+  fseek(file, 0, SEEK_SET);
+
+  while(fgets(line, sizeof(line), file)) {
+    char *colon_pos = strchr(line, ':');
+    if (colon_pos != NULL) {
+      *colon_pos = '\0';
+      
+      Value value;
+
+      if (strstr(colon_pos + 1, "True") || strstr(colon_pos + 1, "False")) {
+        value.boolean_value = (strstr(colon_pos + 1, "True") != NULL);
+        printf("\t%-*s: %s\n", label_width, line, value.boolean_value ? "True": "False");
+      } else {
+        sscanf(colon_pos + 1, "%lf", &value.float_value);
+        printf("\t%-*s: %.2lf\n", label_width, line, value.float_value);
+      }
+    }
+  }
+
+  printf("\n");
+
+  fclose(file);
+  return 0;
+}
+

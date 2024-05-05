@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
+#include "read_params.h"
 
 #define SAVE_OUTPUT
 //#define COSMOLOGY
@@ -168,7 +168,11 @@ void compute_halo_mass_function() {
 #endif
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    get_params(argc, argv);
+
+    return 0;
+
     double a = 1.0;  // Initial scale factor (normalized to 1)
     
     // Initialize particles
