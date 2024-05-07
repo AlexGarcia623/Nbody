@@ -54,6 +54,8 @@ struct global_params get_params(char* filename) {
         params.m_prts = value.float_value;
       } else if (strcmp(key, "V_prt_init_max") == 0) {
         params.v_prts_max = value.float_value;
+      } else if (strcmp(key, "L_box") == 0) {
+        params.l_box = value.float_value;
       } else if (strcmp(key, "Hubble_Param") == 0) {
         params.h = value.float_value;
       } else if (strcmp(key, "Omega_m") == 0) {

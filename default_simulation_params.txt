@@ -1,13 +1,14 @@
 ### Simulation State Variables
 Cosmology: False
 Halo_finder: False
-Save_output: False
+Save_output: True
 
 ### Particle Paramters
-N_steps: 25
-N_particles: 10
-M_particles: 1e10
-V_prt_init_max: 10
+N_steps: 50
+N_particles: 3
+M_particles: 15
+V_prt_init_max: 2
+L_box: 10
 
 ### Cosmology Parameters 
 Hubble_Param: 0.7

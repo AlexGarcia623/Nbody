@@ -21,6 +21,7 @@ struct global_params {
   int n_prts;
   float m_prts;
   float v_prts_max;
+  float l_box;
   float h;
   float Omega_m;
   float Omega_Lambda;
@@ -81,7 +82,7 @@ void print_title() {
 }
 
 
-char* print_params(int argc, char *argv[]) {
+char* get_filename(int argc, char *argv[]) {
   print_title();
 
   char* fname = malloc(100* sizeof(char));
@@ -102,7 +103,15 @@ char* print_params(int argc, char *argv[]) {
     printf("!!!This only takes one argument!!!");
     exit(1);
   }
+  strcpy(fname, filename);
 
+  fname[strlen(filename)] = '\0';
+
+  return fname;
+}
+
+void print_params(char* filename) {
+  FILE *file;
   file = fopen(filename,"r");
 
   char line[100]; // Max line length of 100
@@ -136,11 +145,7 @@ char* print_params(int argc, char *argv[]) {
   printf("\n");
 
   fclose(file);
-  strcpy(fname, filename);
-
-  fname[strlen(filename)] = '\0';
-
-  return fname;
+  sleep(2);
 }
 
 struct global_params get_params(char* filename);

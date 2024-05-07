@@ -5,7 +5,7 @@ Save_output: True
 
 ### Particle Paramters
 N_steps: 25
-N_particles: 10
+N_particles: 100
 M_particles: 5
 V_prt_init_max: 0
 
