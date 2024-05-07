@@ -1,6 +1,6 @@
 if [ -z "$1" ]; then
     # Default filename
-    filename="default_params.txt"
+    filename="default_simulation_params.txt"
 else
     filename=$1
 fi

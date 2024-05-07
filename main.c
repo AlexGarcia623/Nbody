@@ -83,9 +83,9 @@ void save_particle_positions(float step, char* filename, struct Particle *partic
       return;
   }
 
-  fprintf(fp, "X,Y,Z\n");
+  fprintf(fp, "X,Y,Z,M\n");
   for (int i = 0; i < N_PARTICLES; i++) {
-      fprintf(fp, "%f,%f,%f\n", particles[i].position[0], particles[i].position[1], particles[i].position[2]);
+      fprintf(fp, "%f,%f,%f,%f\n", particles[i].position[0], particles[i].position[1], particles[i].position[2], particles[i].mass);
   }
 
   fclose(fp);
