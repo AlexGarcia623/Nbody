@@ -37,3 +37,13 @@ See our Github Wiki for in-depth documentation of all aspects of this project
 ## Issues
 
 Feel free to file an [issue](https://github.com/AlexGarcia623/Nbody/issues) if you find a bug in the code
+
+## All Files Use
+
+- `README.md`: Provide a high-level project overview and quick start guide
+- `clear_particle_data.sh`: Clear the simulation output from the `output/` directory
+- `default_simulation_params.txt`: Parameters used by simulation when no file is provided
+- `main.c`: Main file that runs the Nbody integration
+- `makefile`: Compiler flags for C files
+- `read_params.c` and `read_params.h`: Provides C and header file with functions to read in parameters and save them.
+  
