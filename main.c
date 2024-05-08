@@ -11,6 +11,9 @@ int COSMOLOGY;
 int SAVE_OUTPUT;
 int HALO_FINDER;
 
+int SNAPSHOT_CADENCE;
+float DELTA_T;
+
 int N_PARTICLES;
 int N_STEPS;
 float M_PARTICLES;
@@ -23,7 +26,7 @@ int halo_counts[1] = {0};
 float M_MIN = 1e10;
 float M_MAX = 1e15;
 
-float G = 6.67430e-11;
+double G = 1; // Working in Units of G = 1; 
 
 float h;
 float HUBBLE_CONSTANT;
@@ -47,22 +50,39 @@ void initialize_particles(struct Particle *particles) {
     // Initialize particles with random positions, masses, and velocities
     // according to some global minima and maxima
     for (int i = 0; i < N_PARTICLES; i++) {
-        particles[i].mass = rand() / (RAND_MAX + 1.0) * M_PARTICLES;
-
+        particles[i].mass = M_PARTICLES;
+//        particles[i].mass = (double)rand() / (RAND_MAX + 1.0) * M_PARTICLES;
+//	printf("Mass: %f\n",particles[i].mass);
         particles[i].position[0] = rand() / (RAND_MAX + 1.0) * L_BOX;
         particles[i].position[1] = rand() / (RAND_MAX + 1.0) * L_BOX;
         particles[i].position[2] = rand() / (RAND_MAX + 1.0) * L_BOX;
-        particles[i].velocity[0] = rand() / (RAND_MAX + 1.0) * V_PARTICLES - 10.0;
-        particles[i].velocity[1] = rand() / (RAND_MAX + 1.0) * V_PARTICLES - 10.0;
-        particles[i].velocity[2] = rand() / (RAND_MAX + 1.0) * V_PARTICLES - 10.0;
-
-//        printf("Particle %d Position: (%lf, %lf, %lf)\n", i, particles[i].position[0], particles[i].position[1], particles[i].position[2]);
-
+        particles[i].velocity[0] = (rand() - RAND_MAX/2) / (RAND_MAX + 1.0) * V_PARTICLES;
+        particles[i].velocity[1] = (rand() - RAND_MAX/2) / (RAND_MAX + 1.0) * V_PARTICLES;
+        particles[i].velocity[2] = (rand() - RAND_MAX/2) / (RAND_MAX + 1.0) * V_PARTICLES;
+        particles[i].acceleration[0] = 1.0;
+        particles[i].acceleration[1] = 0.0;
+        particles[i].acceleration[2] = 0.0;
     }
 }
 
-void save_particle_positions(float step, char* filename, struct Particle *particles) {
-  printf("\nSaving file at step %f\n", step);
+void box_wrapping(struct Particle *particles) {
+  int N_dim = 3;
+  for (int i = 0; i < N_PARTICLES; i++) {
+    for (int j = 0; j < N_dim; j++) {
+      float coord = particles[i].position[j];
+      while (coord < 0) {
+        coord += L_BOX;
+      } 
+      while (coord >= L_BOX) {
+        coord -= L_BOX;
+      }
+      particles[i].position[j] = coord;
+    } 
+  }
+}
+
+void save_particle_positions(int step, char* filename, struct Particle *particles) {
+  printf("\nSaving file at step %d\n", step);
   char* dot_position = strrchr(filename, '.');
   if (dot_position != NULL) {
       *dot_position = '\0'; // Replace the dot with null terminator to remove the extension
@@ -76,7 +96,7 @@ void save_particle_positions(float step, char* filename, struct Particle *partic
   mkdir(directory, 0777);
 
   char out_file[100];
-  sprintf(out_file, "%s/particle_positions_%f.csv", directory, step);
+  sprintf(out_file, "%s/particle_positions_%05d.csv", directory, step);
   FILE* fp = fopen(out_file, "w");
   if (fp == NULL) {
       printf("Error saving file.\n");
@@ -193,20 +213,33 @@ void compute_halo_mass_function(int N_BINS) {
   }
 }
 
+double max(double a) {
+    double b = 2;
+    return a > b ? a : b;
+}
+
 void calculate_acceleration(struct Particle *particles, int num_particles) {
+    double G = 1;
     for (int i = 0; i < num_particles; i++) {
+        float ax = 0.0;
+        float ay = 0.0;
+        float az = 0.0;
         for (int j = 0; j < num_particles; j++) {
             if (i != j) {
                 double dx = particles[j].position[0] - particles[i].position[0];
                 double dy = particles[j].position[1] - particles[i].position[1];
                 double dz = particles[j].position[2] - particles[i].position[2];
                 double r = sqrt(dx*dx + dy*dy + dz*dz);
-                double F = G * particles[i].mass * particles[j].mass / (r * r);
-                particles[i].acceleration[0] = F * dx / r / particles[i].mass;
-                particles[i].acceleration[1] = F * dy / r / particles[i].mass;
-                particles[i].acceleration[2] = F * dz / r / particles[i].mass;
+                double dist = max(r); // Prevent Particles from getting too close
+                double F = G * particles[i].mass * particles[j].mass / (dist * dist);
+                ax += F * dx / dist / particles[i].mass;
+                ay += F * dy / dist / particles[i].mass;
+                az += F * dz / dist / particles[i].mass;
             }
         }
+        particles[i].acceleration[0] = ax;
+        particles[i].acceleration[1] = ay;
+        particles[i].acceleration[2] = az;
     }
 }
 
@@ -218,9 +251,6 @@ void update_positions_velocities(struct Particle *particles, int num_particles, 
         particles[i].position[0] += particles[i].velocity[0] * dt;
         particles[i].position[1] += particles[i].velocity[1] * dt;
         particles[i].position[2] += particles[i].velocity[2] * dt;
-    }
-    for (int i = 0; i < num_particles; i++) {
-      printf("%f, %f, %f\n", particles[i].position[0], particles[i].position[1], particles[i].position[2]);
     }
 }
 
@@ -249,6 +279,9 @@ int main(int argc, char *argv[]) {
   HALO_FINDER = simulation_params.halo_finder;
   SAVE_OUTPUT = simulation_params.save_output;
 
+  SNAPSHOT_CADENCE = simulation_params.snapshot_cadence;
+  DELTA_T = simulation_params.delta_t;
+
   N_STEPS = simulation_params.n_steps;
   N_PARTICLES = simulation_params.n_prts;
   M_PARTICLES = simulation_params.m_prts;
@@ -266,10 +299,10 @@ int main(int argc, char *argv[]) {
   // Initialize particles
   initialize_particles(particles);
 
-  double dt = 0.01;
+  double dt = DELTA_T;
   double t_end = dt * N_STEPS;
-  printf("%f", t_end);
 
+  int step = 0;
   for (double t = 0.0; t < t_end; t += dt) {
         // Calculate accelerations
         calculate_acceleration(particles, N_PARTICLES);
@@ -277,9 +310,14 @@ int main(int argc, char *argv[]) {
         // Update positions and velocities
         update_positions_velocities(particles, N_PARTICLES, dt);
 
+        // Apply Periodic Box Conditions
+        box_wrapping(particles);
+
         // Output positions
-        save_particle_positions(t, filename, particles);
-    
+        if (step % SNAPSHOT_CADENCE == 0) {
+          save_particle_positions(step, filename, particles);
+        }
+        step += 1;
   }
 
  

@@ -45,7 +45,11 @@ struct global_params get_params(char* filename) {
       } else if (strcmp(key, "Halo_finder") == 0) {
         params.halo_finder = value.boolean_value ? false: true;
       } else if (strcmp(key, "Save_output") == 0) {
-        params.save_output =value.boolean_value ? false: true;
+        params.save_output = value.boolean_value ? false: true;
+      } else if (strcmp(key, "Snapshot_cadence") == 0) {
+        params.snapshot_cadence = (int)value.float_value; 
+      } else if (strcmp(key, "delta_t") == 0) {
+        params.delta_t = value.float_value;
       } else if (strcmp(key, "N_steps") == 0) {
         params.n_steps = (int)value.float_value;
       } else if (strcmp(key, "N_particles") == 0) {

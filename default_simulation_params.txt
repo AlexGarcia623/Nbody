@@ -2,12 +2,14 @@
 Cosmology: False
 Halo_finder: False
 Save_output: True
+Snapshot_cadence: 3
+delta_t: 0.01
 
 ### Particle Paramters
-N_steps: 50
-N_particles: 3
-M_particles: 15
-V_prt_init_max: 2
+N_steps: 3000
+N_particles: 15
+M_particles: 10
+V_prt_init_max: 0.005
 L_box: 10
 
 ### Cosmology Parameters 

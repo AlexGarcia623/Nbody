@@ -17,6 +17,8 @@ struct global_params {
   bool cosmology;
   bool halo_finder;
   bool save_output;
+  int snapshot_cadence;
+  float delta_t;
   int n_steps;
   int n_prts;
   float m_prts;
@@ -137,7 +139,7 @@ void print_params(char* filename) {
         printf("\t%-*s: %s\n", label_width, line, value.boolean_value ? "True": "False");
       } else {
         sscanf(colon_pos + 1, "%lf", &value.float_value);
-        printf("\t%-*s: %.2lf\n", label_width, line, value.float_value);
+        printf("\t%-*s: %.6lf\n", label_width, line, value.float_value);
       }
     }
   }

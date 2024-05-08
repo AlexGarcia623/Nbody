@@ -22,6 +22,7 @@ import csv
 import numpy as np
 from IPython import display
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 
 class Particle:
@@ -30,6 +31,8 @@ class Particle:
         self.positions = None
 
         self.files = sorted([f for f in os.listdir(out_directory) if f.startswith('particle_positions')])
+        if len(self.files) < 1:
+            raise Exception("You did not run your simulation yet (or did not save output)")
     
         self.filename = out_directory.replace('./output/','').replace('/','.txt')
 
@@ -59,8 +62,12 @@ class Particle:
     def get_positions(self):
         self.Nbody = int(self.params['N_particles'])
         Ndim = 3 # X, Y, Z, Mass
-        self.Nstep = int(self.params['N_steps'])
-        self.positions = np.empty((self.Nbody,Ndim,self.Nstep))
+        self.Nstep = int(self.params['N_steps']) 
+        self.cadence = int(self.params["Snapshot_cadence"])
+
+        self.Nsnaps = len(self.files)
+        
+        self.positions = np.empty((self.Nbody,Ndim,self.Nsnaps))
         
         for f_index, file in enumerate(self.files):
             line = self._read_particle_positions(os.path.join(self.directory, file))
@@ -68,17 +75,48 @@ class Particle:
                 self.positions[index,:,f_index] = line[index]
         return self.positions
 
-    def _animate(self,i):
+    def _animate(self, i):
         self.ax.clear()
-        self.ax.set_ylim(-15,15)
-        self.ax.set_xlim(-15,15)
-        for index in range(self.Nbody):
-            pos = self.positions[index,:,i]
-            self.ax.scatter(pos[0], pos[1], marker='o')
+        L_BOX = float(self.params['L_box'])
+        self.ax.set_ylim(0, L_BOX)
+        self.ax.set_xlim(0, L_BOX)
+        
+        # Assuming self.positions is a 3D array with shape (Nbody, 3, num_frames)
+        positions_at_frame_i = self.positions[:, :, i]
+        self.ax.scatter(positions_at_frame_i[:, self.projection1], 
+                        positions_at_frame_i[:, self.projection2], marker='o')
+
+    def _animate3d(self, i):
+        self.ax.clear()
+        L_BOX = float(self.params['L_box'])
+        self.ax.set_xlim(0, L_BOX)
+        self.ax.set_ylim(0, L_BOX)
+        self.ax.set_zlim(0, L_BOX)
+        
+        # Assuming self.positions is a 3D array with shape (Nbody, 3, num_frames)
+        positions_at_frame_i = self.positions[:, :, i]
+        self.ax.scatter(positions_at_frame_i[:, 0], 
+                        positions_at_frame_i[:, 1], 
+                        positions_at_frame_i[:, 2], marker='o')
+
+
     
-    def make_movie(self,interval=20,repeat=False):
-        fig, self.ax = plt.subplots()
-        ani = FuncAnimation(fig, self._animate, frames=self.Nstep, interval=interval, repeat=repeat)
+    def make_movie(self,interval=40,repeat=False,projection='xy'):
+        projection = projection.upper()
+        different_projections = {
+            "XY":[0,1],
+            "XZ":[0,2],
+            "YZ":[1,2],
+            "3D":[0,1]
+        }
+        self.projection1, self.projection2 = different_projections[projection]
+        if projection.upper() == "3D":
+            fig = plt.figure()
+            self.ax = fig.add_subplot(111, projection='3d')
+            ani = FuncAnimation(fig, self._animate3d, frames=self.Nsnaps, interval=interval, repeat=repeat)
+        else:
+            fig, self.ax = plt.subplots()
+            ani = FuncAnimation(fig, self._animate, frames=self.Nsnaps, interval=interval, repeat=repeat)
         video = ani.to_html5_video()
         html = display.HTML(video)
         display.display(html)
