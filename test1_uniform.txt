@@ -1,12 +1,13 @@
 ### Simulation State Variables
+Merger: False
 Cosmology: False
 Halo_finder: False
 Save_output: True
-Snapshot_cadence: 100
+Snapshot_cadence: 1
 delta_t: 0.1
 
 ### Particle Paramters
-N_steps: 100000
+N_steps: 100
 N_particles: 500
 M_particles: 1000
 V_prt_init_max: 10.0

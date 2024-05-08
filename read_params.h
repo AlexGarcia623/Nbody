@@ -14,6 +14,7 @@ typedef union {
 } Value;
 
 struct global_params {
+  bool merger;
   bool cosmology;
   bool halo_finder;
   bool save_output;
@@ -24,6 +25,7 @@ struct global_params {
   float m_prts;
   float v_prts_max;
   float l_box;
+  float grav_softening;
   float h;
   float Omega_m;
   float Omega_Lambda;

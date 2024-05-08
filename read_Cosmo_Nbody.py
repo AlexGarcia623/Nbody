@@ -38,6 +38,12 @@ class Particle:
 
         self._get_params(self.filename)
         self.get_positions()
+
+        print(f'Found: ')
+        sep = max(len(str(self.Nbody)), len(str(self.Nsnaps))) + 1
+        print(f"\t{self.Nbody:<{sep}}particles")
+        print(f"\t{self.Ndim:<{sep}}dimensions")
+        print(f"\t{self.Nsnaps:<{sep}}snapshots")
     
     def _read_particle_positions(self,filename):
         positions = []
@@ -61,13 +67,13 @@ class Particle:
     
     def get_positions(self):
         self.Nbody = int(self.params['N_particles'])
-        Ndim = 3 # X, Y, Z, Mass
+        self.Ndim = 3 # X, Y, Z, Mass
         self.Nstep = int(self.params['N_steps']) 
         self.cadence = int(self.params["Snapshot_cadence"])
 
         self.Nsnaps = len(self.files)
         
-        self.positions = np.empty((self.Nbody,Ndim,self.Nsnaps))
+        self.positions = np.empty((self.Nbody,self.Ndim,self.Nsnaps))
         
         for f_index, file in enumerate(self.files):
             line = self._read_particle_positions(os.path.join(self.directory, file))
@@ -92,6 +98,9 @@ class Particle:
         self.ax.set_xlim(0, L_BOX)
         self.ax.set_ylim(0, L_BOX)
         self.ax.set_zlim(0, L_BOX)
+
+        angle = i * 2 * np.pi / 36  # Adjust the rotation speed if needed
+        self.ax.view_init(elev=30, azim=angle)  # Set the elevation and azimuth angles
         
         # Assuming self.positions is a 3D array with shape (Nbody, 3, num_frames)
         positions_at_frame_i = self.positions[:, :, i]

@@ -11,4 +11,3 @@ read_params: read_params.o
 
 clean:
 	rm -f main read_params *.o
-

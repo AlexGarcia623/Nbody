@@ -1,5 +1,6 @@
 #include <math.h>
 #include <sys/stat.h>
+#include <time.h>
 #include "read_params.h"
 #include "read_params.c"
 
@@ -11,6 +12,8 @@ int COSMOLOGY;
 int SAVE_OUTPUT;
 int HALO_FINDER;
 
+int MERGER;
+
 int SNAPSHOT_CADENCE;
 float DELTA_T;
 
@@ -20,13 +23,14 @@ float M_PARTICLES;
 float V_PARTICLES;
 int N_BINS;
 float L_BOX;
+float GRAVITATIONAL_SOFTENING;
+
+float G = 6.67E-11; 
 
 int halo_counts[1] = {0};
 
 float M_MIN = 1e10;
 float M_MAX = 1e15;
-
-double G = 1; // Working in Units of G = 1; 
 
 float h;
 float HUBBLE_CONSTANT;
@@ -49,13 +53,26 @@ struct Particle particles[1]; // Initialized particles var
 void initialize_particles(struct Particle *particles) {
     // Initialize particles with random positions, masses, and velocities
     // according to some global minima and maxima
+    srand(time(NULL));
     for (int i = 0; i < N_PARTICLES; i++) {
         particles[i].mass = M_PARTICLES;
+        double random_num = (double)rand() / RAND_MAX;
 //        particles[i].mass = (double)rand() / (RAND_MAX + 1.0) * M_PARTICLES;
-//	printf("Mass: %f\n",particles[i].mass);
-        particles[i].position[0] = rand() / (RAND_MAX + 1.0) * L_BOX;
-        particles[i].position[1] = rand() / (RAND_MAX + 1.0) * L_BOX;
-        particles[i].position[2] = rand() / (RAND_MAX + 1.0) * L_BOX;
+        if ((int)MERGER == 0) {
+          if (random_num < 0.5) {
+            particles[i].position[0] = rand() / (RAND_MAX + 1.0) * L_BOX/4 + L_BOX/8;
+            particles[i].position[1] = rand() / (RAND_MAX + 1.0) * L_BOX/4 + L_BOX/8;
+            particles[i].position[2] = rand() / (RAND_MAX + 1.0) * L_BOX/4 + L_BOX/8;
+          } else {
+            particles[i].position[0] = rand() / (RAND_MAX + 1.0) * L_BOX/4 + L_BOX/2 + L_BOX/8;
+            particles[i].position[1] = rand() / (RAND_MAX + 1.0) * L_BOX/4 + L_BOX/2 + L_BOX/8;
+            particles[i].position[2] = rand() / (RAND_MAX + 1.0) * L_BOX/4 + L_BOX/2 + L_BOX/8;
+          }
+        } else {
+          particles[i].position[0] = rand() / (RAND_MAX + 1.0) * L_BOX;
+          particles[i].position[1] = rand() / (RAND_MAX + 1.0) * L_BOX;
+          particles[i].position[2] = rand() / (RAND_MAX + 1.0) * L_BOX;
+        }
         particles[i].velocity[0] = (rand() - RAND_MAX/2) / (RAND_MAX + 1.0) * V_PARTICLES;
         particles[i].velocity[1] = (rand() - RAND_MAX/2) / (RAND_MAX + 1.0) * V_PARTICLES;
         particles[i].velocity[2] = (rand() - RAND_MAX/2) / (RAND_MAX + 1.0) * V_PARTICLES;
@@ -213,8 +230,8 @@ void compute_halo_mass_function(int N_BINS) {
   }
 }
 
-double max(double a) {
-    double b = 2;
+double softening(double a) {
+    double b = GRAVITATIONAL_SOFTENING;
     return a > b ? a : b;
 }
 
@@ -230,7 +247,7 @@ void calculate_acceleration(struct Particle *particles, int num_particles) {
                 double dy = particles[j].position[1] - particles[i].position[1];
                 double dz = particles[j].position[2] - particles[i].position[2];
                 double r = sqrt(dx*dx + dy*dy + dz*dz);
-                double dist = max(r); // Prevent Particles from getting too close
+                double dist = softening(r); // Prevent Particles from getting too close
                 double F = G * particles[i].mass * particles[j].mass / (dist * dist);
                 ax += F * dx / dist / particles[i].mass;
                 ay += F * dy / dist / particles[i].mass;
@@ -275,6 +292,9 @@ int main(int argc, char *argv[]) {
   print_params(filename);
   struct global_params simulation_params = get_params(filename);
 
+  MERGER = simulation_params.merger;
+  printf("%d",(int)MERGER);
+
   COSMOLOGY = simulation_params.cosmology;
   HALO_FINDER = simulation_params.halo_finder;
   SAVE_OUTPUT = simulation_params.save_output;
@@ -287,6 +307,8 @@ int main(int argc, char *argv[]) {
   M_PARTICLES = simulation_params.m_prts;
   V_PARTICLES = simulation_params.v_prts_max;
   L_BOX = simulation_params.l_box;
+  GRAVITATIONAL_SOFTENING = simulation_params.grav_softening;
+
 
   h = simulation_params.h;
   HUBBLE_CONSTANT = h * 100;
@@ -322,28 +344,6 @@ int main(int argc, char *argv[]) {
 
  
   return 0;
-
-    double a = 0.0;  // Initial scale factor
-    
-    // Main simulation loop
-    for (int step = 0; step < N_STEPS; step++) {
-        // Calculate gravitational forces with cosmological expansion
-        calculate_forces(a);
-
-        // Update particle positions with cosmological expansion
-        update_positions(a);
-
-      if ((int)COSMOLOGY == 0) {
-        // Update scale factor for next time step (using Euler integration for simplicity)
-        double hubble_parameter, acceleration_parameter;
-        calculate_friedmann_equations(a, &hubble_parameter, &acceleration_parameter);
-        a += 0.01 * hubble_parameter;  // Increment scale factor
-      }
-
-      // Save particle positions to CSV file
-//      if ((int)SAVE_OUTPUT == 0) {
-//       save_particle_positions(step, filename);
-//     }
 
       // Compute and analyze halo mass function
       if (step % 100 == 0) {

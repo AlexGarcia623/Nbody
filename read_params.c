@@ -40,7 +40,9 @@ struct global_params get_params(char* filename) {
       }
         
       // Handle the key and value as needed
-      if (strcmp(key, "Cosmology") == 0) {
+      if (strcmp(key, "Merger") == 0) {
+        params.merger = value.boolean_value ? true: false;
+      } else if (strcmp(key, "Cosmology") == 0) {
         params.cosmology = value.boolean_value ? false: true;
       } else if (strcmp(key, "Halo_finder") == 0) {
         params.halo_finder = value.boolean_value ? false: true;
@@ -60,6 +62,8 @@ struct global_params get_params(char* filename) {
         params.v_prts_max = value.float_value;
       } else if (strcmp(key, "L_box") == 0) {
         params.l_box = value.float_value;
+      } else if (strcmp(key, "Grav_softening") == 0) { 
+        params.grav_softening = value.float_value;
       } else if (strcmp(key, "Hubble_Param") == 0) {
         params.h = value.float_value;
       } else if (strcmp(key, "Omega_m") == 0) {
