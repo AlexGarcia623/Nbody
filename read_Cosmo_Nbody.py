@@ -26,7 +26,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 
 class Particle:
-    def __init__(self,out_directory):
+    def __init__(self,out_directory,params_dir='TestOneParams'):
+        self.params_dir = params_dir
         self.directory = out_directory
         self.positions = None
 
@@ -63,6 +64,7 @@ class Particle:
 
     def _get_params(self, filename):        
         self.params = {}
+        filename = './' + self.params_dir + '/' + filename
         with open(filename, 'r') as file:
             for line in file:
                 # Use regular expressions to match lines with parameter values
