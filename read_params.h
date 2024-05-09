@@ -21,6 +21,7 @@ struct global_params {
   bool edge;
   int snapshot_cadence;
   float delta_t;
+  float fb_strength;
   int n_steps;
   int n_prts;
   float m_prts;

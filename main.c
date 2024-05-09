@@ -14,9 +14,13 @@ int HALO_FINDER;
 
 int MERGER;
 int EDGE = 1;
+int FEEDBACK = 0;
 
 int SNAPSHOT_CADENCE;
 float DELTA_T;
+int FEEDBACK_FLAG = 1;
+
+float FB_STRENGTH;
 
 int N_PARTICLES;
 int N_STEPS;
@@ -56,11 +60,17 @@ void box_wrapping(struct Particle *particles) {
   for (int i = 0; i < N_PARTICLES; i++) {
     for (int j = 0; j < N_dim; j++) {
       float coord = particles[i].position[j];
-      while (coord < 0) {
+      if (coord < 0) {
         coord += L_BOX;
+        particles[i].velocity[0] /= 2;
+        particles[i].velocity[1] /= 2;
+        particles[i].velocity[2] /= 2;
       }
-      while (coord >= L_BOX) {
-        coord -= L_BOX;
+      if (coord >= L_BOX) {
+	coord -= L_BOX;
+        particles[i].velocity[0] /= 2;
+        particles[i].velocity[1] /= 2;
+        particles[i].velocity[2] /= 2;
       }
       particles[i].position[j] = coord;
     }
@@ -85,9 +95,9 @@ void initialize_particles(struct Particle *particles) {
             particles[i].position[2] = rand() / (RAND_MAX + 1.0) * L_BOX/4 + L_BOX/2 + L_BOX/8;
           }
         } else {
-          particles[i].position[0] = rand() / (RAND_MAX + 1.0) * L_BOX;
-          particles[i].position[1] = rand() / (RAND_MAX + 1.0) * L_BOX;
-          particles[i].position[2] = rand() / (RAND_MAX + 1.0) * L_BOX;
+          particles[i].position[0] = rand() / (RAND_MAX + 1.0) * L_BOX/2 + L_BOX/4;
+          particles[i].position[1] = rand() / (RAND_MAX + 1.0) * L_BOX/2 + L_BOX/4;
+          particles[i].position[2] = rand() / (RAND_MAX + 1.0) * L_BOX/2 + L_BOX/4;
         }
         particles[i].velocity[0] = (rand() - RAND_MAX/2) / (RAND_MAX + 1.0) * V_PARTICLES;
         particles[i].velocity[1] = (rand() - RAND_MAX/2) / (RAND_MAX + 1.0) * V_PARTICLES;
@@ -167,62 +177,62 @@ void calculate_friedmann_equations(double a, double* hubble_parameter, double* a
   }
 }
 
-void calculate_forces(double a) {
-    // Calculate gravitational forces between particles
-    // and account for cosmological expansion
-//    double hubble_parameter, acceleration_parameter;
-//    calculate_friedmann_equations(
-//	a, 
-//	&hubble_parameter, 
-//	&acceleration_parameter
-//   );
+// void calculate_forces(double a) {
+//     // Calculate gravitational forces between particles
+//     // and account for cosmological expansion
+// //    double hubble_parameter, acceleration_parameter;
+// //    calculate_friedmann_equations(
+// //	a, 
+// //	&hubble_parameter, 
+// //	&acceleration_parameter
+// //   );
 
-    int acceleration_parameter = 1;
+//     int acceleration_parameter = 1;
 
-    for (int i = 0; i < N_PARTICLES; i++) {
-        double ax = 0.0, ay = 0.0, az = 0.0;  // Acceleration components for particle i
+//     for (int i = 0; i < N_PARTICLES; i++) {
+//         double ax = 0.0, ay = 0.0, az = 0.0;  // Acceleration components for particle i
 
-        for (int j = 0; j < N_PARTICLES; j++) {
-            if (i != j) {
-                double dx = particles[j].position[0] - particles[i].position[0];
-                double dy = particles[j].position[1] - particles[i].position[1];
-                double dz = particles[j].position[2] - particles[i].position[2];
-                double r = sqrt(dx*dx + dy*dy + dz*dz);  // Distance between particles
+//         for (int j = 0; j < N_PARTICLES; j++) {
+//             if (i != j) {
+//                 double dx = particles[j].position[0] - particles[i].position[0];
+//                 double dy = particles[j].position[1] - particles[i].position[1];
+//                 double dz = particles[j].position[2] - particles[i].position[2];
+//                 double r = sqrt(dx*dx + dy*dy + dz*dz);  // Distance between particles
 
-                // Gravity
-                double f = G * particles[i].mass * particles[j].mass / pow(r, 2);
+//                 // Gravity
+//                 double f = G * particles[i].mass * particles[j].mass / pow(r, 2);
 
-                // Update acceleration components for particle i
-                ax += f * dx / r;
-                ay += f * dy / r;
-                az += f * dz / r;
-            }
-        }
+//                 // Update acceleration components for particle i
+//                 ax += f * dx / r;
+//                 ay += f * dy / r;
+//                 az += f * dz / r;
+//             }
+//         }
 
-        if ((int)COSMOLOGY == 0) {
-          // Account for cosmic acceleration
-          ax += acceleration_parameter * particles[i].position[0];
-          ay += acceleration_parameter * particles[i].position[1];
-          az += acceleration_parameter * particles[i].position[2];
-        }
+//         if ((int)COSMOLOGY == 0) {
+//           // Account for cosmic acceleration
+//           ax += acceleration_parameter * particles[i].position[0];
+//           ay += acceleration_parameter * particles[i].position[1];
+//           az += acceleration_parameter * particles[i].position[2];
+//         }
 
-        // Update velocities of particle i
-        particles[i].velocity[0] += ax;
-        particles[i].velocity[1] += ay;
-        particles[i].velocity[2] += az;
-    }
-}
+//         // Update velocities of particle i
+//         particles[i].velocity[0] += ax;
+//         particles[i].velocity[1] += ay;
+//         particles[i].velocity[2] += az;
+//     }
+// }
 
-void update_positions(double a) {
-    // Update positions of particles and account for cosmological expansion
-    for (int i = 0; i < N_PARTICLES; i++) {
-        particles[i].position[0] += particles[i].velocity[0];
-        particles[i].position[1] += particles[i].velocity[1];
-        particles[i].position[2] += particles[i].velocity[2];
+// void update_positions(double a) {
+//     // Update positions of particles and account for cosmological expansion
+//     for (int i = 0; i < N_PARTICLES; i++) {
+//         particles[i].position[0] += particles[i].velocity[0];
+//         particles[i].position[1] += particles[i].velocity[1];
+//         particles[i].position[2] += particles[i].velocity[2];
 
-        printf("Particle %d Position: (%lf, %lf, %lf)\n", i, particles[i].position[0], particles[i].position[1], particles[i].position[2]);
-    }
-}
+//         printf("Particle %d Position: (%lf, %lf, %lf)\n", i, particles[i].position[0], particles[i].position[1], particles[i].position[2]);
+//     }
+// }
 
 void compute_halo_mass_function(int N_BINS) {
   // Compute the halo mass function from the simulation data
@@ -255,6 +265,76 @@ double softening(double a) {
     return a > b ? a : b;
 }
 
+float* find_center_of_mass(struct Particle *particles, int num_particles) {
+  float *center = (float*)malloc(3 * sizeof(float));
+  float moment_x = 0;
+  float moment_y = 0;
+  float moment_z = 0;
+  float total_mass = 0;
+  for (int i = 0; i < num_particles; i++) {
+    moment_x += particles[i].position[0] * particles[i].mass;
+    moment_y += particles[i].position[1] * particles[i].mass;
+    moment_z += particles[i].position[2] * particles[i].mass;
+    total_mass += particles[i].mass;
+  }
+  center[0] = moment_x / total_mass;
+  center[1] = moment_y / total_mass;
+  center[2] = moment_z / total_mass;
+
+  return center;
+}
+
+void add_feedback_accel(struct Particle *particles, float* distance, 
+                        float* xsign, float* ysign, float* zsign) {
+  for (int i = 0; i < N_PARTICLES; i++) {
+    if (distance[i] < L_BOX/20) {
+      particles[i].acceleration[0] += FB_STRENGTH / distance[i] * xsign[i];
+      particles[i].acceleration[1] += FB_STRENGTH / distance[i] * ysign[i];
+      particles[i].acceleration[2] += FB_STRENGTH / distance[i] * zsign[i];    
+    }
+  }
+}
+
+void n_within_L(struct Particle *particles, int num_particles) {
+  float *center_of_mass = find_center_of_mass(particles, num_particles);
+  float *distance = (float*)malloc(num_particles * sizeof(float));
+  int n_within = 0;
+  float *xsign = (float*)malloc(num_particles * sizeof(float));
+  float *ysign = (float*)malloc(num_particles * sizeof(float));
+  float *zsign = (float*)malloc(num_particles * sizeof(float)); 
+
+  float x, y, z, r;
+
+  for (int i = 0; i < num_particles; i++) {
+    x = center_of_mass[0] - particles[i].position[0];
+    y = center_of_mass[1] - particles[i].position[1];
+    z = center_of_mass[2] - particles[i].position[2];
+ 
+    xsign[i] = signbit(x) ? -1 : 1;
+    ysign[i] = signbit(y) ? -1 : 1;
+    zsign[i] = signbit(z) ? -1 : 1;
+ 
+    distance[i] = sqrt(pow(x,2) +
+                       pow(y,2) +
+                       pow(z,2));
+    if (distance[i] < L_BOX/20) {
+      n_within += 1;
+    }
+  }
+  if (n_within > num_particles/20) {
+    FEEDBACK_FLAG = 0;
+  } else {
+    FEEDBACK_FLAG = 1;
+  }
+ 
+  if (FEEDBACK_FLAG == 0) {
+    add_feedback_accel(particles, distance, xsign, ysign, zsign);
+  }
+
+  free(center_of_mass);
+}
+
+
 void calculate_acceleration(struct Particle *particles, int num_particles) {
     double G = 1;
     for (int i = 0; i < num_particles; i++) {
@@ -277,6 +357,9 @@ void calculate_acceleration(struct Particle *particles, int num_particles) {
         particles[i].acceleration[0] = ax;
         particles[i].acceleration[1] = ay;
         particles[i].acceleration[2] = az;
+    }
+    if ((int)FEEDBACK == 0) {
+      n_within_L(particles, num_particles);
     }
 }
 
@@ -322,6 +405,8 @@ int main(int argc, char *argv[]) {
   SNAPSHOT_CADENCE = simulation_params.snapshot_cadence;
   DELTA_T = simulation_params.delta_t;
 
+  FB_STRENGTH = simulation_params.fb_strength;
+
   N_STEPS = simulation_params.n_steps;
   N_PARTICLES = simulation_params.n_prts;
   M_PARTICLES = simulation_params.m_prts;
@@ -354,7 +439,7 @@ int main(int argc, char *argv[]) {
 
         // Update positions and velocities
         update_positions_velocities(particles, N_PARTICLES, dt);
-
+        n_within_L(particles, N_PARTICLES);
         // Apply Periodic Box Conditions
         box_wrapping(particles);
 

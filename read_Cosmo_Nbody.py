@@ -116,8 +116,6 @@ class Particle:
         self.ax.scatter(positions_at_frame_i[:, 0], 
                         positions_at_frame_i[:, 1], 
                         positions_at_frame_i[:, 2], marker='o')
-
-
     
     def make_movie(self,interval=40,repeat=False,projection='xy'):
         projection = projection.upper()
@@ -149,3 +147,75 @@ class Particle:
                             IC[:, 1], 
                             IC[:, 2], marker='o')
         plt.show()
+
+    def center_of_mass_plot(self):
+        snaps = np.arange(self.Nsnaps) + 1
+        mass = float(self.params["M_particles"])
+        total_mass = mass * self.Nbody
+        moment_x = np.sum(mass * self.positions[:, 0, :], axis=0)
+        moment_y = np.sum(mass * self.positions[:, 1, :], axis=0)
+        moment_z = np.sum(mass * self.positions[:, 2, :], axis=0)
+        
+        plt.plot(snaps, moment_x / total_mass, label='X')
+        plt.plot(snaps, moment_y / total_mass, label='Y')
+        plt.plot(snaps, moment_z / total_mass, label='Z')
+
+        plt.xlabel('Snapshot')
+        plt.ylabel('Position')
+        
+        plt.legend()
+
+        plt.show()
+
+    def dispersion_plot(self):
+        snaps = np.arange(self.Nsnaps) + 1
+        mass = float(self.params["M_particles"])
+        total_mass = mass * self.Nbody
+        x = np.std(self.positions[:, 0, :], axis=0)
+        y = np.std(self.positions[:, 1, :], axis=0)
+        z = np.std(self.positions[:, 2, :], axis=0)
+
+        plt.plot(snaps, x, label='X')
+        plt.plot(snaps, y, label='Y')
+        plt.plot(snaps, z, label='Z')
+
+        plt.xlabel('Snapshot')
+        plt.ylabel('Dispersion')
+        
+        plt.legend()
+
+        plt.show()
+
+    def density_profile(self,snap=800,sep=10):
+        snaps = np.arange(self.Nsnaps) + 1
+        mass = float(self.params["M_particles"])
+        total_mass = mass * self.Nbody
+        moment_x = np.sum(mass * self.positions[:, 0, snap])
+        moment_y = np.sum(mass * self.positions[:, 1, snap])
+        moment_z = np.sum(mass * self.positions[:, 2, snap])
+        
+        center_x = moment_x / total_mass
+        center_y = moment_y / total_mass
+        center_z = moment_z / total_mass
+
+        distances = np.zeros((self.Nbody,3))
+
+        distances[:, 0] = center_x - self.positions[:, 0, snap]
+        distances[:, 1] = center_y - self.positions[:, 1, snap]
+        distances[:, 2] = center_y - self.positions[:, 2, snap]
+
+        radii = np.sqrt( distances[:, 0]**2 + distances[:, 1]**2 + distances[:, 2]**2 )
+        
+        all_radii = np.arange(0, int(self.params["L_box"]),sep)
+        density = np.zeros(len(all_radii))
+        
+        for index, rad in enumerate(all_radii):
+            mask = ((radii > rad) & (radii < rad+sep))
+            density[index] = mass * sum(mask) / (sep**3)
+
+        plt.plot(all_radii, density)
+
+        plt.text(0.95,0.9,f"Snapshot: {snap}", ha='right', transform=plt.gca().transAxes)
+        
+        plt.xlabel('Radius')
+        plt.ylabel('Density (mass / volume)')
