@@ -1,16 +1,18 @@
 ### Simulation State Variables
+Merger: False
 Cosmology: False
 Halo_finder: False
-Save_output: True
+Save_output: False
 Snapshot_cadence: 3
 delta_t: 0.01
 
 ### Particle Paramters
-N_steps: 3000
+N_steps: 3
 N_particles: 15
 M_particles: 10
 V_prt_init_max: 0.005
 L_box: 10
+Grav_softening: 2
 
 ### Cosmology Parameters 
 Hubble_Param: 0.7

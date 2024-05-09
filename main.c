@@ -13,6 +13,7 @@ int SAVE_OUTPUT;
 int HALO_FINDER;
 
 int MERGER;
+int EDGE = 1;
 
 int SNAPSHOT_CADENCE;
 float DELTA_T;
@@ -50,6 +51,22 @@ struct Particle {
 
 struct Particle particles[1]; // Initialized particles var
 
+void box_wrapping(struct Particle *particles) {
+  int N_dim = 3;
+  for (int i = 0; i < N_PARTICLES; i++) {
+    for (int j = 0; j < N_dim; j++) {
+      float coord = particles[i].position[j];
+      while (coord < 0) {
+        coord += L_BOX;
+      }
+      while (coord >= L_BOX) {
+        coord -= L_BOX;
+      }
+      particles[i].position[j] = coord;
+    }
+  }
+}
+
 void initialize_particles(struct Particle *particles) {
     // Initialize particles with random positions, masses, and velocities
     // according to some global minima and maxima
@@ -57,7 +74,6 @@ void initialize_particles(struct Particle *particles) {
     for (int i = 0; i < N_PARTICLES; i++) {
         particles[i].mass = M_PARTICLES;
         double random_num = (double)rand() / RAND_MAX;
-//        particles[i].mass = (double)rand() / (RAND_MAX + 1.0) * M_PARTICLES;
         if ((int)MERGER == 0) {
           if (random_num < 0.5) {
             particles[i].position[0] = rand() / (RAND_MAX + 1.0) * L_BOX/4 + L_BOX/8;
@@ -82,20 +98,24 @@ void initialize_particles(struct Particle *particles) {
     }
 }
 
-void box_wrapping(struct Particle *particles) {
-  int N_dim = 3;
-  for (int i = 0; i < N_PARTICLES; i++) {
-    for (int j = 0; j < N_dim; j++) {
-      float coord = particles[i].position[j];
-      while (coord < 0) {
-        coord += L_BOX;
-      } 
-      while (coord >= L_BOX) {
-        coord -= L_BOX;
-      }
-      particles[i].position[j] = coord;
-    } 
-  }
+void initialize_particles_on_edge(struct Particle *particles) {
+    // Initialize particles with random positions, masses, and velocities
+    // according to some global minima and maxima
+    srand(time(NULL));
+    for (int i = 0; i < N_PARTICLES; i++) {
+        particles[i].mass = M_PARTICLES;
+        double random_num = (double)rand() / RAND_MAX;
+        particles[i].position[0] = rand() / (RAND_MAX + 1.0) * L_BOX/2 + 3*L_BOX/4;
+        particles[i].position[1] = rand() / (RAND_MAX + 1.0) * L_BOX/2 + 3*L_BOX/4;
+        particles[i].position[2] = rand() / (RAND_MAX + 1.0) * L_BOX/2 + 3*L_BOX/4;
+        particles[i].velocity[0] = (rand() - RAND_MAX/2) / (RAND_MAX + 1.0) * V_PARTICLES;
+        particles[i].velocity[1] = (rand() - RAND_MAX/2) / (RAND_MAX + 1.0) * V_PARTICLES;
+        particles[i].velocity[2] = (rand() - RAND_MAX/2) / (RAND_MAX + 1.0) * V_PARTICLES;
+        particles[i].acceleration[0] = 1.0;
+        particles[i].acceleration[1] = 0.0;
+        particles[i].acceleration[2] = 0.0;
+    }
+    box_wrapping(particles);
 }
 
 void save_particle_positions(int step, char* filename, struct Particle *particles) {
@@ -293,7 +313,7 @@ int main(int argc, char *argv[]) {
   struct global_params simulation_params = get_params(filename);
 
   MERGER = simulation_params.merger;
-  printf("%d",(int)MERGER);
+  EDGE = simulation_params.edge;
 
   COSMOLOGY = simulation_params.cosmology;
   HALO_FINDER = simulation_params.halo_finder;
@@ -309,7 +329,6 @@ int main(int argc, char *argv[]) {
   L_BOX = simulation_params.l_box;
   GRAVITATIONAL_SOFTENING = simulation_params.grav_softening;
 
-
   h = simulation_params.h;
   HUBBLE_CONSTANT = h * 100;
   OMEGA_M = simulation_params.Omega_m;
@@ -319,7 +338,11 @@ int main(int argc, char *argv[]) {
   struct Particle particles[N_PARTICLES];
 
   // Initialize particles
-  initialize_particles(particles);
+  if ((int)EDGE == 0) {
+    initialize_particles_on_edge(particles);
+  } else {
+    initialize_particles(particles);
+  }
 
   double dt = DELTA_T;
   double t_end = dt * N_STEPS;
@@ -344,14 +367,14 @@ int main(int argc, char *argv[]) {
 
  
   return 0;
-
-      // Compute and analyze halo mass function
-      if (step % 100 == 0) {
-        if ((int)HALO_FINDER == 0) {
-          printf("Finding Haloes at step %i\n\n", step);
-          compute_halo_mass_function(N_BINS);
-        }
-      }
-    }
-    return 0;
 }
+//     // Compute and analyze halo mass function
+//      if (step % 100 == 0) {
+//        if ((int)HALO_FINDER == 0) {
+//          printf("Finding Haloes at step %i\n\n", step);
+//         compute_halo_mass_function(N_BINS);
+//       }
+//      }
+//    }
+//    return 0;
+//}

@@ -33,7 +33,7 @@ struct global_params get_params(char* filename) {
       // Convert value to the appropriate data type (float, int, etc.)
       Value value;
 
-      if ((strcmp(key, "Cosmology") == 0) || (strcmp(key, "Halo_finder") == 0) ||( strcmp(key, "Save_output") == 0)) {
+      if ((strcmp(key, "Cosmology") == 0) || (strcmp(key, "Halo_finder") == 0) ||( strcmp(key, "Save_output") == 0) || (strcmp(key, "Merger") == 0) || strcmp(key, "Edge") == 0) {
         value.boolean_value = (strstr(colon_pos + 1, "True") != NULL);
       } else {
         sscanf(colon_pos + 1, "%lf", &value.float_value);
@@ -41,13 +41,15 @@ struct global_params get_params(char* filename) {
         
       // Handle the key and value as needed
       if (strcmp(key, "Merger") == 0) {
-        params.merger = value.boolean_value ? true: false;
+        params.merger = value.boolean_value ? false: true;
       } else if (strcmp(key, "Cosmology") == 0) {
         params.cosmology = value.boolean_value ? false: true;
       } else if (strcmp(key, "Halo_finder") == 0) {
         params.halo_finder = value.boolean_value ? false: true;
       } else if (strcmp(key, "Save_output") == 0) {
         params.save_output = value.boolean_value ? false: true;
+      } else if (strcmp(key, "Edge") == 0) {
+        params.edge = value.boolean_value ? false: true;
       } else if (strcmp(key, "Snapshot_cadence") == 0) {
         params.snapshot_cadence = (int)value.float_value; 
       } else if (strcmp(key, "delta_t") == 0) {

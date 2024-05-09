@@ -18,6 +18,7 @@ struct global_params {
   bool cosmology;
   bool halo_finder;
   bool save_output;
+  bool edge;
   int snapshot_cadence;
   float delta_t;
   int n_steps;

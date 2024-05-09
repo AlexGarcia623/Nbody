@@ -39,6 +39,13 @@ class Particle:
         self._get_params(self.filename)
         self.get_positions()
 
+        self.different_projections = {
+            "XY":[0,1],
+            "XZ":[0,2],
+            "YZ":[1,2],
+            "3D":[0,1]
+        }
+        
         print(f'Found: ')
         sep = max(len(str(self.Nbody)), len(str(self.Nsnaps))) + 1
         print(f"\t{self.Nbody:<{sep}}particles")
@@ -112,13 +119,7 @@ class Particle:
     
     def make_movie(self,interval=40,repeat=False,projection='xy'):
         projection = projection.upper()
-        different_projections = {
-            "XY":[0,1],
-            "XZ":[0,2],
-            "YZ":[1,2],
-            "3D":[0,1]
-        }
-        self.projection1, self.projection2 = different_projections[projection]
+        self.projection1, self.projection2 = self.different_projections[projection]
         if projection.upper() == "3D":
             fig = plt.figure()
             self.ax = fig.add_subplot(111, projection='3d')
@@ -130,3 +131,19 @@ class Particle:
         html = display.HTML(video)
         display.display(html)
         plt.close()
+
+    def show_initial_condition(self,projection='xy'):
+        projection = projection.upper()
+        IC = self.positions[:, :, 0]
+        self.projection1, self.projection2 = self.different_projections[projection]
+        if projection != '3D':
+            fig, self.ax = plt.subplots()
+            self.ax.scatter(IC[:, self.projection1], 
+                            IC[:, self.projection2], marker='o')
+        else:
+            fig = plt.figure()
+            self.ax = fig.add_subplot(111, projection='3d')
+            self.ax.scatter(IC[:, 0], 
+                            IC[:, 1], 
+                            IC[:, 2], marker='o')
+        plt.show()
