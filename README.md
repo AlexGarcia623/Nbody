@@ -43,8 +43,8 @@ Feel free to file an [issue](https://github.com/AlexGarcia623/Nbody/issues) if y
 - `TestOneParams/` - contains parameter files for test1
 - `TestTwoParams/` - contains parameter files for test2
 - `TestThreeParams/` - contains parameter files for test3
-- `img` - contains any images used in jupyter notebooks
-- `output` - contains simulation output, is also where simulation output is written to
+- `img/` - contains any images used in jupyter notebooks
+- `output/` - contains simulation output, is also where simulation output is written to
 
 ## All Files Explanation
 
