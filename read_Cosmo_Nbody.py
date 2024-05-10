@@ -1,13 +1,15 @@
 '''Read in particle data from Cosmo Nbody
 #
-This module, written by Alex Garcia for AST5470 @ UVA, Spring 2024,
+This module, written by Alex Garcia for AST5470 @ UVA, Spring 2024, provides
+functionality for reading in CSV outputs for the Cosmo Nbody simulation data.
 #
-Usage:
-    - Import the necessary packages before using this module.
-    - Use the functions provided in this module for specific tasks.
-#
-Functions Provided:
+Example Usage:
+## Parameters file lives in ./TestThreeParams/ directory
+## Simulation Output lives in ./output/test3_strong_fb/ directory
+strong = rcn.Particle('./output/test3_strong_fb/','./TestThreeParams')
+strong.make_movie(projection='3d')
 '''
+
 __author__ = "Alex Garcia"
 __copyright__ = "Copyright 2024, The Authors"
 __credits__ = ["Alex Garcia"]
@@ -26,6 +28,29 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 
 class Particle:
+    '''Initializes a Particle object.
+    
+    Parameters:
+        - out_directory (str): Path to the directory containing particle data files.
+        - params_dir (str): Directory containing parameter files (default is 'TestOneParams').
+
+    Attributes:
+        - positions (ndarray): Array containing particle positions over time.
+        - Nbody (int): Number of particles.
+        - Ndim (int): Number of dimensions (always 3).
+        - Nstep (int): Number of steps.
+        - cadence (int): Snapshot cadence.
+        - Nsnaps (int): Number of snapshots.
+
+    Methods:
+        - get_positions(): Retrieves particle positions from data files.
+        - show_initial_condition(projection='xy'): Displays initial particle distribution.
+        - make_movie(interval=40, repeat=False, projection='xy'): Creates an animation of particle motion.
+        - center_of_mass_plot(): Plots center of mass evolution over time.
+        - dispersion_plot(): Plots dispersion of particles over time.
+        - density_profile(snap=800, sep=10): Plots density profile at a specified snapshot.
+    '''
+    
     def __init__(self,out_directory,params_dir='TestOneParams'):
         self.params_dir = params_dir
         self.directory = out_directory
@@ -186,7 +211,7 @@ class Particle:
 
         plt.show()
 
-    def density_profile(self,snap=800,sep=10):
+    def density_profile(self,snap=800,sep=10,label=''):
         snaps = np.arange(self.Nsnaps) + 1
         mass = float(self.params["M_particles"])
         total_mass = mass * self.Nbody
@@ -213,7 +238,7 @@ class Particle:
             mask = ((radii > rad) & (radii < rad+sep))
             density[index] = mass * sum(mask) / (sep**3)
 
-        plt.plot(all_radii, density)
+        plt.plot(all_radii, density, label=label)
 
         plt.text(0.95,0.9,f"Snapshot: {snap}", ha='right', transform=plt.gca().transAxes)
         
